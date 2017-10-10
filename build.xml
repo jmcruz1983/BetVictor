@@ -1,0 +1,51 @@
+<project name="BetVictor" basedir="." default="run-tests">
+    <property name="mozilla.driver.version" value="0.19.0"/>
+    <property name="sources" value="src"/>
+    <property name="bin.drivers" value="bins/drivers"/>
+    <property name="down.drivers" value="downloads/drivers"/>
+
+    <target name="clean-drivers">
+        <delete dir="${down.drivers}"/>
+        <delete dir="${bins.drivers}"/>
+    </target>
+
+    <target name="make-dirs" depends="clean-drivers">
+        <mkdir dir="${down.drivers}"/>
+        <mkdir dir="${bin.drivers}"/>
+    </target>
+
+    <target name="download" depends="make-dirs">
+        <get src="https://github.com/mozilla/geckodriver/releases/download/v${mozilla.driver.version}/geckodriver-v${mozilla.driver.version}-macos.tar.gz"
+             dest="${down.drivers}/mozilla.tar.gz"/>
+    </target>
+
+    <target name="extract-tar" depends="download">
+        <gunzip dest="${down.drivers}">
+            <fileset dir="${down.drivers}">
+                <include name="**/*.tar.gz"/>
+            </fileset>
+        </gunzip>
+        <untar dest="${bin.drivers}">
+            <fileset dir="${down.drivers}">
+                <include name="**/*.tar"/>
+            </fileset>
+        </untar>
+    </target>
+
+    <target name="extract" depends="extract-tar"/>
+
+    <target name="permissions" depends="extract">
+        <chmod perm="+x">
+            <fileset dir="${bin.drivers}">
+                <include name="**/geckodriver"/>
+            </fileset>
+        </chmod>
+    </target>
+
+    <target name="firefox" depends="permissions">
+        <exec executable="python">
+            <env key="BIN_DRIVERS" value="${bin.drivers}"/>
+            <arg value="${sources}/BetVictor.py"/>
+        </exec>
+    </target>
+</project>
